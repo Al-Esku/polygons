@@ -6,6 +6,7 @@ export default function Home() {
     const [sides, setSides] = React.useState(3);
     const [sum, setSum] = React.useState(9);
     const [polygons, setPolygons] = React.useState<number[][][]>([])
+    const [time, setTime] = React.useState(0)
 
     const points = ((radius: number) => {
         const angle = 360 / sides
@@ -76,7 +77,7 @@ export default function Home() {
                 const loop = reorderListsToFormLoop(lists)
                 return loop.length !== 0 ? [loop]: []
             } else {
-                /*const frequencyMap = new Map<number, number[]>()
+                const frequencyMap = new Map<number, number[]>()
                 for (let i = 0; i < lists.length; i++) {
                     for (const num of lists[i]) {
                         const indices = frequencyMap.get(num) || []
@@ -87,11 +88,11 @@ export default function Home() {
                 if (!lists.every(list => partialListIsValid(list, frequencyMap))) {
                     console.log(`${lists} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid`)
                     return []
-                }*/
+                }
 
                 let loops: number[][][] = []
-                for (const num of lists[lists.length - 1]) {
-                    findSums(num).forEach(option => {
+                for (let i = 1; i < 3; i++) {
+                    findSums(lists[lists.length - 1][i]).forEach(option => {
                         loops = loops.concat(findLoops([...lists, option]))
                     })
                 }
@@ -99,27 +100,26 @@ export default function Home() {
             }
         }
 
-        /*function partialListIsValid(list: number[], frequencyMap: Map<number, number[]>) {
+        function partialListIsValid(list: number[], frequencyMap: Map<number, number[]>) {
             let duplicates = 0
-            let singles = 0
             let valid = true
             for (const num of list) {
                 const indexes = frequencyMap.get(num)
                 if (indexes?.length === 2) {
                     duplicates++
-                } else if (indexes?.length === 1) {
-                    singles++
                 } else if (indexes!.length >= 3) {
+                    console.log(`${list} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid: Too many indexes`)
                     valid = false
                 }
                 for (let i = 0; i < indexes!.length - 1; i++) {
-                    if (Math.abs(indexes![i] - indexes![i+1]) !== 1) {
+                    if (Math.abs(indexes![i] - indexes![i+1]) !== 1 && indexes![i+1] !== list.length - 1) {
+                        console.log(`${list} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid: Non-looping indexes`)
                         valid = false
                     }
                 }
             }
-            return list.length === 3 && valid && (duplicates === 2 || duplicates === 1) && (singles === 1 || singles === 2)
-        }*/
+            return list.length === 3 && valid && (duplicates <= 2)
+        }
 
         function listIsValid(list: number[], frequencyMap: Map<number, number[]>) {
             let duplicates = 0
@@ -240,7 +240,6 @@ export default function Home() {
             existingPolygons: number[][][],
             newPolygons: number[][][]
         ): number[][][] {
-            // Helper function to serialize an array for comparison
             const corners = (polygon: number[][]) =>
                 polygon.map((inner) => inner[2]).sort()
 
@@ -277,6 +276,7 @@ export default function Home() {
             return tempPolygons
         })
 
+        const startTime = performance.now()
         let tempPolygons: number[][][] = []
         let high = sum - 3
         while (high > Math.floor(sum / 3)) {
@@ -286,6 +286,8 @@ export default function Home() {
         }
         console.log(tempPolygons)
         setPolygons(tempPolygons)
+        const endTime = performance.now()
+        setTime(endTime - startTime)
     }, [sum, sides])
 
     return (
@@ -295,7 +297,7 @@ export default function Home() {
             <label>Sum:</label>
             <input className={"ml-2 px-1 mr-6 border border-black"} value={sum} type={"number"} onInput={event => setSum(+event.currentTarget.value)}/>
             <div>
-                Total Polygons: {polygons.length}
+                Polygons: Found {polygons.length} in {time.toFixed(2)} milliseconds
             </div>
             <div className={"flex flex-wrap"}>
                 {polygons.map((poly, index) => {
