@@ -71,9 +71,9 @@ export default function Home() {
 
     React.useEffect(() => {
         function findLoops(lists: number[][]) {
-            console.log(lists)
+            //console.log(lists)
             if (lists.length === sides) {
-                console.log("hi")
+                //console.log("hi")
                 const loop = reorderListsToFormLoop(lists)
                 return loop.length !== 0 ? [loop]: []
             } else {
@@ -86,7 +86,7 @@ export default function Home() {
                 }
 
                 if (!lists.every(list => partialListIsValid(list, frequencyMap))) {
-                    console.log(`${lists} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid`)
+                    //console.log(`${lists} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid`)
                     return []
                 }
 
@@ -108,12 +108,12 @@ export default function Home() {
                 if (indexes?.length === 2) {
                     duplicates++
                 } else if (indexes!.length >= 3) {
-                    console.log(`${list} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid: Too many indexes`)
+                    //console.log(`${list} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid: Too many indexes`)
                     valid = false
                 }
                 for (let i = 0; i < indexes!.length - 1; i++) {
                     if (Math.abs(indexes![i] - indexes![i+1]) !== 1 && indexes![i+1] !== list.length - 1) {
-                        console.log(`${list} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid: Non-looping indexes`)
+                        //console.log(`${list} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid: Non-looping indexes`)
                         valid = false
                     }
                 }
@@ -194,7 +194,7 @@ export default function Home() {
             }
 
             if (!lists.every(list => listIsValid(list, frequencyMap))) {
-                console.log(`${lists} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid`)
+                //console.log(`${lists} with frequency map ${JSON.stringify(Array.from(frequencyMap))} is invalid`)
                 return []
             }
 
@@ -212,17 +212,17 @@ export default function Home() {
                     if (newIndex !== undefined) {
                         index = newIndex
                     } else {
-                        console.log(`No valid index found for frequency map ${frequencyMap.get(last)} with index ${index}`)
+                        //console.log(`No valid index found for frequency map ${frequencyMap.get(last)} with index ${index}`)
                         return []
                     }
                 }
                 if (containsIdenticalList(newList, list)) {
-                    console.log(`${newList} already contains ${list}`)
+                    //console.log(`${newList} already contains ${list}`)
                     return []
                 }
                 newList.push(list)
             }
-            console.log(`${newList} is valid`)
+            //console.log(`${newList} is valid`)
             return newList
         }
 
@@ -265,7 +265,7 @@ export default function Home() {
         const generatePolygons = ((high: number) => {
             let tempPolygons: number[][][] = []
             const lines = findSums(high)
-            console.log(lines)
+            //console.log(lines)
             if (lines.length === 0) {
                 return tempPolygons
             } else {
@@ -284,7 +284,7 @@ export default function Home() {
             tempPolygons = addUniquePolygons(tempPolygons, newPolygons)
             high--
         }
-        console.log(tempPolygons)
+        //console.log(tempPolygons)
         setPolygons(tempPolygons)
         const endTime = performance.now()
         setTime(endTime - startTime)
@@ -311,11 +311,11 @@ export default function Home() {
                             const vertexIndex = (index % 2)
 
                             if (sideIndex >= poly.length || !poly[sideIndex]) {
-                                console.warn("Index out of bounds for poly:", {poly, sideIndex});
+                                //console.warn("Index out of bounds for poly:", {poly, sideIndex});
                                 return null; // Skip rendering this element
                             }
 
-                            console.log(`${sideIndex}, ${vertexIndex}, ${poly[sideIndex][vertexIndex]}`)
+                            //console.log(`${sideIndex}, ${vertexIndex}, ${poly[sideIndex][vertexIndex]}`)
 
                             return <div key={index}
                                         style={{
