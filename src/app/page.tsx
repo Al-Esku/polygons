@@ -102,6 +102,12 @@ export default function Home() {
                 const worker = new Worker("worker.js")
                 worker.addEventListener("message", function (message: {data: number[][][]}) {
                     resolve(message.data)
+                    if (highs.length > 0) {
+                        const high = highs.pop()
+                        if (high !== undefined) {
+                            promises.push(createWorker(high))
+                        }
+                    }
                 })
                 worker.addEventListener("error", reject)
                 worker.postMessage({
@@ -115,10 +121,17 @@ export default function Home() {
         const startTime = performance.now()
         setLoading(true)
         const promises = []
+        const maxWorkers = navigator.hardwareConcurrency || 4
+        const highs: number[] = []
         for (let high = sum - 3; high >= sides * 2; high--) {
-            promises.push(createWorker(high))
+            highs.push(high)
         }
-
+        for (let i = 0; i < maxWorkers; i++) {
+            const high = highs.pop()
+            if (high !== undefined) {
+                promises.push(createWorker(high))
+            }
+        }
         Promise.all(promises).then(function(data) {
             setPolygons(data.reduce((acc, value) => {return addUniquePolygons(acc, value)}, [] as number[][][]))
             const endTime = performance.now()
