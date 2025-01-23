@@ -7,7 +7,6 @@ export default function Home() {
     const [sum, setSum] = React.useState(9);
     const [polygons, setPolygons] = React.useState<number[][][]>([])
     const [time, setTime] = React.useState(0)
-    const [loading, setLoading] = React.useState(false)
 
     const points = ((radius: number) => {
         const angle = 360 / sides
@@ -113,7 +112,6 @@ export default function Home() {
         }
 
         const startTime = performance.now()
-        setLoading(true)
         const promises = []
         for (let high = sum - 3; high >= sides * 2; high--) {
             promises.push(createWorker(high))
@@ -123,12 +121,10 @@ export default function Home() {
             setPolygons(data.reduce((acc, value) => {return addUniquePolygons(acc, value)}, [] as number[][][]))
             const endTime = performance.now()
             setTime(endTime - startTime)
-            setLoading(false)
         }).catch(() => {
             setPolygons([])
             const endTime = performance.now()
             setTime(endTime - startTime)
-            setLoading(false)
         })
     }, [sum, sides])
 
