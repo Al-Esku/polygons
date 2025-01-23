@@ -135,9 +135,9 @@ export default function Home() {
     return (
         <div>
             <label>Sides:</label>
-            <input disabled={loading} className={"ml-2 px-1 mr-6 border border-black"} value={sides} type={"number"} onInput={event => setSides(+event.currentTarget.value)}/>
+            <input className={"ml-2 px-1 mr-6 border border-black"} value={sides} type={"number"} onInput={event => setSides(+event.currentTarget.value)}/>
             <label>Sum:</label>
-            <input disabled={loading} className={"ml-2 px-1 mr-6 border border-black"} value={sum} type={"number"} onInput={event => setSum(+event.currentTarget.value)}/>
+            <input className={"ml-2 px-1 mr-6 border border-black"} value={sum} type={"number"} onInput={event => setSum(+event.currentTarget.value)}/>
             <div>
                 Polygons: Found {polygons.length} in {time.toFixed(2)} milliseconds
             </div>
