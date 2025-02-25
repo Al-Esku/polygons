@@ -1,8 +1,9 @@
 function findLoops(lists, sum, sides) {
-    //console.log(lists)
+    //console.log(lists.toString())
     if (lists.length === sides) {
         //console.log("hi")
         const loop = reorderListsToFormLoop(lists)
+        //console.log(`${loop} for lists ${lists}`)
         return loop.length !== 0 ? [loop]: []
     } else {
         const frequencyMap = new Map()
@@ -111,6 +112,7 @@ function containsIdenticalList(
 }
 
 function reorderListsToFormLoop(lists) {
+    //console.log(`${lists} in loop`)
     const newList = []
     const frequencyMap = new Map()
 
@@ -140,12 +142,12 @@ function reorderListsToFormLoop(lists) {
             if (newIndex !== undefined) {
                 index = newIndex
             } else {
-                //console.log(`No valid index found for frequency map ${frequencyMap.get(last)} with index ${index}`)
+                //console.log(`No valid index found for frequency map ${frequencyMap.get(last)} with index ${index} for lists ${lists}`)
                 return []
             }
         }
         if (containsIdenticalList(newList, list)) {
-            //console.log(`${newList} already contains ${list}`)
+            //console.log(`${newList} already contains ${list} on lists ${lists}`)
             return []
         }
         newList.push(list)
@@ -176,6 +178,7 @@ const generatePolygons = ((high, sum, sides) => {
             tempPolygons = tempPolygons.concat(findLoops([line], sum, sides))
         }
     }
+    //console.log(tempPolygons)
     return tempPolygons
 })
 

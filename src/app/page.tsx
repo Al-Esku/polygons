@@ -75,21 +75,24 @@ export default function Home() {
             newPolygons: number[][][]
         ): number[][][] {
             const corners = (polygon: number[][]) =>
-                polygon.map((inner) => inner[2]).sort()
+                polygon.map((inner) => inner[2]).join(",")
 
             // Create a Set of existing serialized polygons
-            const existingSet = new Set(existingPolygons.map(corners));
+            let existingSet = new Set(existingPolygons.map(polygon => corners(polygon).concat(`,${corners(polygon)}`)));
+            existingSet = existingSet.union(new Set(existingPolygons.map(polygon => corners(polygon.slice().reverse()).concat(`,${corners(polygon.slice().reverse())}`))))
 
+            //console.log(existingSet)
             // Add new polygons if they are not already in the set
             newPolygons.forEach((polygon) => {
                 const newCorners = corners(polygon);
                 if (!existingSet.values().some(item => {
-                    return item.every((value, index) => {
-                        return value === newCorners[index]
-                    })
+                    //console.log(`${item}, ${newCorners}: ${item.includes(newCorners)}`)
+                    return item.includes(newCorners)
                 })) {
                     existingPolygons.push(polygon);
-                    existingSet.add(newCorners);
+                    //console.log(`Polygon: ${newCorners.concat(`,${newCorners}`)}, reverse: ${corners(polygon.slice().reverse()).concat(`,${corners(polygon.slice().reverse())}`)}`)
+                    existingSet.add(newCorners.concat(`,${newCorners}`));
+                    existingSet.add(corners(polygon.slice().reverse()).concat(`,${corners(polygon.slice().reverse())}`))
                 }
             });
 
@@ -118,6 +121,7 @@ export default function Home() {
         }
 
         Promise.all(promises).then(function(data) {
+            //console.log(data)
             setPolygons(data.reduce((acc, value) => {return addUniquePolygons(acc, value)}, [] as number[][][]))
             const endTime = performance.now()
             setTime(endTime - startTime)
