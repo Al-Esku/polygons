@@ -67,7 +67,20 @@ export default function Home() {
         return Array.from(Array(count).keys())
     })
 
+    function findSmallestArray(arr: number[]) {
+        const length = arr.length
+        const doubled = arr.concat(arr)
+        const reverse = doubled.toReversed()
 
+        const forwardStartIndex = doubled.indexOf(Math.min(...doubled))
+        const reverseStartIndex = reverse.indexOf(Math.min(...reverse))
+
+        if (doubled[forwardStartIndex + 1] < reverse[reverseStartIndex + 1]) {
+            return doubled.slice(forwardStartIndex, forwardStartIndex + length)
+        } else {
+            return reverse.slice(reverseStartIndex, reverseStartIndex + length)
+        }
+    }
 
     React.useEffect(() => {
         function addUniquePolygons(
@@ -75,11 +88,10 @@ export default function Home() {
             newPolygons: number[][][]
         ): number[][][] {
             const corners = (polygon: number[][]) =>
-                polygon.map((inner) => inner[2]).join(",")
+                findSmallestArray(polygon.map((inner) => inner[2])).join(",")
 
             // Create a Set of existing serialized polygons
-            let existingSet = new Set(existingPolygons.map(polygon => corners(polygon).concat(`,${corners(polygon)}`)));
-            existingSet = existingSet.union(new Set(existingPolygons.map(polygon => corners(polygon.slice().reverse()).concat(`,${corners(polygon.slice().reverse())}`))))
+            const existingSet = new Set(existingPolygons.map(polygon => corners(polygon)));
 
             //console.log(existingSet)
             // Add new polygons if they are not already in the set
@@ -87,12 +99,11 @@ export default function Home() {
                 const newCorners = corners(polygon);
                 if (!existingSet.values().some(item => {
                     //console.log(`${item}, ${newCorners}: ${item.includes(newCorners)}`)
-                    return item.includes(newCorners)
+                    return item === newCorners
                 })) {
                     existingPolygons.push(polygon);
                     //console.log(`Polygon: ${newCorners.concat(`,${newCorners}`)}, reverse: ${corners(polygon.slice().reverse()).concat(`,${corners(polygon.slice().reverse())}`)}`)
-                    existingSet.add(newCorners.concat(`,${newCorners}`));
-                    existingSet.add(corners(polygon.slice().reverse()).concat(`,${corners(polygon.slice().reverse())}`))
+                    existingSet.add(newCorners);
                 }
             });
 
