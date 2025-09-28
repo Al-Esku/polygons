@@ -93,6 +93,7 @@ export default function Home() {
     const [polygons, setPolygons] = React.useState<number[][][]>([])
     const [time, setTime] = React.useState(0)
     const [vertices, setVertices] = React.useState<number[][]>([])
+    const [visuals, setVisuals] = React.useState<boolean>(true)
 
     const points = ((radius: number) => {
         const angle = 360 / sides
@@ -286,10 +287,13 @@ export default function Home() {
             </>}
             <label>Sum:</label>
             <input className={"ml-2 px-1 mr-6 border border-black"} value={sum} type={"number"} onInput={event => setSum(+event.currentTarget.value)}/>
+            <label>Visuals:</label>
+            <input type={"checkbox"} className={"ml-2 px-1 mr-6 border border-black"} checked={visuals} onChange={event => setVisuals(event.currentTarget.checked)}/>
+
             <div>
                 Polygons: Found {dimensions === 2 ? polygons.length : vertices.length} in {time.toFixed(2)} milliseconds
             </div>
-            {dimensions === 2 ? <div className={"flex flex-wrap"}>
+            {visuals && (dimensions === 2 ? <div className={"flex flex-wrap"}>
                 {polygons.map((poly, index) => {
                     //console.warn(poly)
                     return <div key={index} id={index.toString()}>
@@ -333,7 +337,7 @@ export default function Home() {
                         </Canvas>
                     </div>
                 })}
-            </div>}
+            </div>)}
         </div>
     );
 }
