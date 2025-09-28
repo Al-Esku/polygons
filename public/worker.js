@@ -166,24 +166,43 @@ const findSums = ((num, sum) => {
     return results
 })
 
-
-const generatePolygons = ((high, sum, sides) => {
-    let tempPolygons = []
-    const lines = findSums(high, sum)
-    //console.log(lines)
-    if (lines.length === 0) {
-        return tempPolygons
-    } else {
-        for (const line of lines) {
-            tempPolygons = tempPolygons.concat(findLoops([line], sum, sides))
+function findPolyhedra(start, sum, sides, polygonsPerVertex) {
+    let vertices = []
+    for (let i = start + 1; i < sum - start - 1; i++) {
+        for (let k = i + 1; k < sum - i - 1; k++) {
+            for (let j = k + 1; j < sum - k - 1; j++) {
+                let points = new Set([start, i, k, j, sum - start - i, sum - start - k, sum - start - j, sum - i - k, sum - i - j, sum - k - j])
+                if (points.size === 10) {
+                    vertices.push([start, i, k, j])
+                }
+            }
         }
+    }
+    return vertices
+}
+
+
+const generatePolygons = ((dimensions, high, sum, polygonsPerVertex, sides) => {
+    let tempPolygons = []
+    if (dimensions === 2) {
+        const lines = findSums(high, sum)
+        //console.log(lines)
+        if (lines.length === 0) {
+            return tempPolygons
+        } else {
+            for (const line of lines) {
+                tempPolygons = tempPolygons.concat(findLoops([line], sum, sides))
+            }
+        }
+    } else if (dimensions === 3) {
+        tempPolygons = findPolyhedra(high, sum, sides, polygonsPerVertex)
     }
     //console.log(tempPolygons)
     return tempPolygons
 })
 
 self.addEventListener("message", function(message) {
-    const newPolygons = generatePolygons(message.data.high, message.data.sum, message.data.sides)
+    const newPolygons = generatePolygons(message.data.dimensions, message.data.high, message.data.sum, message.data.polygonsPerVertex, message.data.sides)
     //console.log(tempPolygons)
     self.postMessage(newPolygons)
     self.close()

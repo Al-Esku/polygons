@@ -1,12 +1,98 @@
 "use client"
 
 import React from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Text, Billboard, Edges, Outlines } from "@react-three/drei";
+import { EffectComposer, Outline, Select } from '@react-three/postprocessing';
+import * as THREE from 'three';
+import { useMemo } from 'react';
+
+
+function Tetrahedron({points}: {points: number[]}) {
+    const meshRef = React.useRef<THREE.Mesh>(null!); 
+
+    const vertexPositions = useMemo(() => {
+        // Create a tetrahedron geometry to extract vertex positions
+        const geometry = new THREE.TetrahedronGeometry(2, 0);
+        const positions = geometry.getAttribute('position');
+        const uniqueVertices = new Set<String>();
+        const midpoints = new Set<String>();
+
+        // Collect unique vertices (there are only 4 in a basic tetrahedron)
+        for (let i = 0; i < positions.count; i++) {
+            const vertex = new THREE.Vector3().fromBufferAttribute(positions, i);
+            uniqueVertices.add(vertex.toArray().toString()); // Use string to ensure uniqueness
+        }
+
+        const uniqueVerticesArray = Array.from(uniqueVertices).map((str: String) => {
+            const [x, y, z] = str.split(',').map(Number);
+            return new THREE.Vector3(x, y, z);
+        });
+
+        for (let i = 0; i < uniqueVerticesArray.length; i++) {
+            for (let j = i + 1; j < uniqueVerticesArray.length; j++) {
+                const v1 = uniqueVerticesArray[i];
+                const v2 = uniqueVerticesArray[j];
+                const midpoint = new THREE.Vector3().addVectors(v1, v2).multiplyScalar(0.5);
+                midpoints.add(midpoint.toArray().toString());
+            }
+        }
+
+        const edgeMidpoints = Array.from(midpoints).map(str => {
+            const [x, y, z] = str.split(',').map(Number);
+            return new THREE.Vector3(x, y, z);
+        });
+
+        // Convert back to Vector3s
+        return uniqueVerticesArray.concat(edgeMidpoints)
+    }, []);
+
+    return (
+        <group>
+            <mesh>
+                <Edges color={"black"}/>
+                <tetrahedronGeometry args={[2, 0]} />
+                <meshStandardMaterial color={"white"} />
+            </mesh>
+            {vertexPositions.map((pos, idx) => (
+                <group key={idx} position={pos}>
+                    <mesh>
+                        <sphereGeometry args={[0.2, 16, 16]} />
+                        <meshStandardMaterial color={"white"} />
+                        <Outlines thickness={1} color={"black"}/>
+                    </mesh>
+                    <Billboard
+                        follow={true}
+                        lockX={false}
+                        lockY={false}
+                        lockZ={false}
+                    >
+                        <Text
+                            position={[0, 0, 0.2]} // Slightly in front of the sphere
+                            fontSize={0.3}
+                            color="black"
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineColor="black"
+                            outlineWidth={0.00}
+                        >
+                            {points[idx]}
+                        </Text>
+                    </Billboard>
+                </group>
+            ))}
+        </group>
+    );
+}
 
 export default function Home() {
+    const [dimensions, setDimensions] = React.useState(2)
     const [sides, setSides] = React.useState(3);
+    const [polygonsPerVertex, setPolygonsPerVertex] = React.useState(3)
     const [sum, setSum] = React.useState(9);
     const [polygons, setPolygons] = React.useState<number[][][]>([])
     const [time, setTime] = React.useState(0)
+    const [vertices, setVertices] = React.useState<number[][]>([])
 
     const points = ((radius: number) => {
         const angle = 360 / sides
@@ -118,22 +204,56 @@ export default function Home() {
                 })
                 worker.addEventListener("error", reject)
                 worker.postMessage({
+                    dimensions: dimensions,
                     sum: sum,
                     sides: sides,
+                    polygonsPerVertex: polygonsPerVertex,
                     high: high
                 })
             })
         }
 
+        function create3DWorker(start: number) {
+            return new Promise<number[][]>(function(resolve, reject) {
+                const worker = new Worker("worker.js")
+                worker.addEventListener("message", function (message: {data: number[][]}) {
+                    resolve(message.data)
+                })
+                worker.addEventListener("error", reject)
+                worker.postMessage({
+                    dimensions: dimensions,
+                    sum: sum,
+                    sides: sides,
+                    polygonsPerVertex: polygonsPerVertex,
+                    high: start
+                })
+            })
+        }
+
+        function is3DArray(data: number[][] | number[][][]): data is number[][][] {
+            return Array.isArray(data[0]) && Array.isArray(data[0][0]);
+        }
+
         const startTime = performance.now()
         const promises = []
-        for (let high = sum - 3; high >= sides * 2; high--) {
-            promises.push(createWorker(high))
+        if (dimensions === 2) {
+            for (let high = sum - 3; high >= sides * 2; high--) {
+                promises.push(createWorker(high))
+            }
+        } else {
+            for (let i = 1; i <= sum/2; i++) {
+                promises.push(create3DWorker(i))
+            }
         }
 
         Promise.all(promises).then(function(data) {
-            //console.log(data)
-            setPolygons(data.reduce((acc, value) => {return addUniquePolygons(acc, value)}, [] as number[][][]))
+            console.log(data)
+            if (is3DArray(data[0])) {
+                setPolygons((data as number[][][][]).reduce((acc, value) => {return addUniquePolygons(acc, value)}, [] as number[][][]))
+            } else {
+                setVertices(Array.from((data as number[][][]).reduce((acc, value) => {return acc.union(new Set(value))}, new Set<number[]>())))
+            }
+            
             const endTime = performance.now()
             setTime(endTime - startTime)
         }).catch(() => {
@@ -141,18 +261,35 @@ export default function Home() {
             const endTime = performance.now()
             setTime(endTime - startTime)
         })
-    }, [sum, sides])
+    }, [sum, sides, dimensions, polygonsPerVertex])
 
     return (
         <div>
-            <label>Sides:</label>
-            <input className={"ml-2 px-1 mr-6 border border-black"} value={sides} type={"number"} onInput={event => setSides(+event.currentTarget.value)}/>
+            <label>Dimensions:</label>
+            <select className={"ml-2 px-2 py-0.5 bg-white mr-6 border border-black"} value={dimensions} onChange={e => setDimensions(parseInt(e.currentTarget.value))}>
+                <option>2</option>
+                <option>3</option>
+            </select>
+            {dimensions==2 ? <>
+                        <label>Sides:</label>
+                <input className={"ml-2 px-1 mr-6 border border-black"} value={sides} type={"number"} onInput={event => setSides(+event.currentTarget.value)}/>
+            </>: <>
+                <label>Shape:</label>
+                <select className={"ml-2 px-1 py-0.5 bg-white mr-6 border border-black"} value={`${sides},${polygonsPerVertex}`} onChange={e => {
+                    const sides = e.currentTarget.value.split(",")[0]
+                    const polygons = e.currentTarget.value.split(",")[1]
+                    setSides(parseInt(sides))
+                    setPolygonsPerVertex(parseInt(polygons))
+                }}>
+                    <option value={"3,3"}>Tetrahedron</option>
+                </select>
+            </>}
             <label>Sum:</label>
             <input className={"ml-2 px-1 mr-6 border border-black"} value={sum} type={"number"} onInput={event => setSum(+event.currentTarget.value)}/>
             <div>
-                Polygons: Found {polygons.length} in {time.toFixed(2)} milliseconds
+                Polygons: Found {dimensions === 2 ? polygons.length : vertices.length} in {time.toFixed(2)} milliseconds
             </div>
-            <div className={"flex flex-wrap"}>
+            {dimensions === 2 ? <div className={"flex flex-wrap"}>
                 {polygons.map((poly, index) => {
                     //console.warn(poly)
                     return <div key={index} id={index.toString()}>
@@ -179,7 +316,24 @@ export default function Home() {
                         })}
                     </div>
                 })}
-            </div>
+            </div>: <div className={"flex flex-wrap"}>
+                {vertices.map((vert, index) => {
+                    let points = Array.from(vert)
+                    for (let i = 0; i < vert.length; i++){
+                        for (let j = i+1; j < vert.length; j++) {
+                            points.push(sum - points[i] - points[j])
+                        }
+                    }
+                    return <div key={index} className="aspect-square" style={{"border": "1px", "borderStyle": "outset", "borderColor": "black", "width": "25%"}}>
+                        <Canvas >
+                            <OrbitControls />
+                            <ambientLight intensity={5} />
+                            <pointLight position={[10, 10, 10]} />
+                            <Tetrahedron points={points}></Tetrahedron>
+                        </Canvas>
+                    </div>
+                })}
+            </div>}
         </div>
     );
 }

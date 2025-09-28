@@ -9,10 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.3.0",
+    "@react-three/postprocessing": "^3.0.4",
+    "drei": "^2.2.21",
     "js-combinatorics": "^2.1.2",
     "next": "15.1.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-three-fiber": "^6.0.13"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
