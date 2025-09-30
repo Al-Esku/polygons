@@ -3,20 +3,17 @@
 import React from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Text, Billboard, Edges, Outlines } from "@react-three/drei";
-import { EffectComposer, Outline, Select } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useMemo } from 'react';
 
 
 function Tetrahedron({points}: {points: number[]}) {
-    const meshRef = React.useRef<THREE.Mesh>(null!); 
-
     const vertexPositions = useMemo(() => {
         // Create a tetrahedron geometry to extract vertex positions
         const geometry = new THREE.TetrahedronGeometry(2, 0);
         const positions = geometry.getAttribute('position');
-        const uniqueVertices = new Set<String>();
-        const midpoints = new Set<String>();
+        const uniqueVertices = new Set<string>();
+        const midpoints = new Set<string>();
 
         // Collect unique vertices (there are only 4 in a basic tetrahedron)
         for (let i = 0; i < positions.count; i++) {
@@ -24,7 +21,7 @@ function Tetrahedron({points}: {points: number[]}) {
             uniqueVertices.add(vertex.toArray().toString()); // Use string to ensure uniqueness
         }
 
-        const uniqueVerticesArray = Array.from(uniqueVertices).map((str: String) => {
+        const uniqueVerticesArray = Array.from(uniqueVertices).map((str: string) => {
             const [x, y, z] = str.split(',').map(Number);
             return new THREE.Vector3(x, y, z);
         });
@@ -322,7 +319,7 @@ export default function Home() {
                 })}
             </div>: <div className={"flex flex-wrap"}>
                 {vertices.map((vert, index) => {
-                    let points = Array.from(vert)
+                    const points = Array.from(vert)
                     for (let i = 0; i < vert.length; i++){
                         for (let j = i+1; j < vert.length; j++) {
                             points.push(sum - points[i] - points[j])
